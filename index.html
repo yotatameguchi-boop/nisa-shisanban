@@ -226,9 +226,19 @@ details[open] summary{margin-bottom:10px}
             <p class="hint">円建てでは、その年の米国資産のリターンに<b>その年に実際に起きたドル円の変動</b>を掛け合わせます。ドル建ては為替を無視した参考値です。</p>
           </div>
           <div class="field">
-            <div class="field-top"><label class="field-label" for="i-wstock">資産配分</label><span class="field-val" id="v-wstock"></span></div>
+            <div class="field-top"><label class="field-label" for="i-wus">株式の中身</label><span class="field-val" id="v-wus"></span></div>
+            <div class="segmented" role="group" aria-label="株式の地域構成">
+              <button class="seg" id="p-us">米国</button>
+              <button class="seg" id="p-world">全世界</button>
+              <button class="seg" id="p-exus">米国以外</button>
+            </div>
+            <input type="range" id="i-wus" min="0" max="100" step="1" value="74">
+            <p class="hint">S&amp;P500 と MSCI World ex USA（米国を除く先進国）の比率。「全世界」は米国74％で、<b>オルカン（MSCI ACWI）の先進国部分</b>にあたります。新興国（オルカンの約12％）は含みません。米国以外を混ぜると、使えるデータは1970年以降になります。</p>
+          </div>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="i-wstock">株式と債券</label><span class="field-val" id="v-wstock"></span></div>
             <input type="range" id="i-wstock" min="0" max="100" step="5" value="100">
-            <p class="hint">株式（S&amp;P500）と米国10年国債の比率。株・債券・為替はすべて<b>同じ年をまとめて抽出</b>するので、実際に起きた三者の連動関係がそのまま残ります。</p>
+            <p class="hint">上で決めた株式と、米国10年国債の比率。株・債券・為替はすべて<b>同じ年をまとめて抽出</b>するので、実際に起きた三者の連動関係がそのまま残ります。配分は毎年末にリバランスする前提です。</p>
           </div>
           <div class="field">
             <div class="field-top"><label class="field-label" for="i-period">使う期間</label></div>
@@ -445,6 +455,13 @@ details[open] summary{margin-bottom:10px}
           <a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Historical Returns on Stocks, Bonds and Bills</a>
           の年次系列。S&amp;P500のトータルリターン（配当込み）、米10年国債、3ヶ月T-Billを1928年から2025年まで98年分そのまま収録しています。株式と債券は<b>同じ年をペアで抽出</b>するため、両者の実際の相関が保たれます。</li>
         <li><b>ファンドの信託報酬・純資産総額：</b>日本経済新聞の投資信託ページ（2026年8月31日時点、信託報酬は税込）。</li>
+        <li><b>米国以外の株式の実績データ：</b>MSCI World ex USA（米国を除く先進国、グロス・配当込み、米ドル建て）の年次リターン 1970〜2025年。
+          1970〜2011年は <a href="https://www.upmyinterest.com/msci-world-ex-us/" target="_blank" rel="noopener">upmyinterest.com</a>、
+          2012〜2025年は <a href="https://www.msci.com/documents/10199/255599/msci-world-ex-usa-index.pdf" target="_blank" rel="noopener">MSCI公式ファクトシート</a> の年次performance表。
+          両者が重なる2012〜2023年の12年分は小数第2位まで一致したので、同じ系列とみなしています（公式値が新しい直近2年は公式側を採用）。</li>
+        <li><b>「全世界」は新興国を含まないこと：</b>オルカン（MSCI ACWI）は先進国が約88％、新興国が約12％。ここで再現できるのは<b>先進国部分だけ</b>です。
+          新興国指数は1988年開始で、1998年以前の年次リターンを信頼できる無料の出典から確認できなかったため、推測で埋めることはしませんでした。
+          残り12％のぶん、実際のオルカンより値動きはやや小さめに出ます。</li>
         <li><b>為替の実績データ：</b>ドル円の年末レート（1971年〜2025年）。出典：セントルイス連銀 FRED
           <a href="https://fred.stlouisfed.org/series/DEXJPUS" target="_blank" rel="noopener">DEXJPUS</a> を年次・期末値に集計したもの。
           円建てモードでは <code>円建てリターン =（1＋ドル建てリターン）×（その年末のレート ÷ 前年末のレート）− 1</code> で換算し、
@@ -493,6 +510,16 @@ var FX=[
 [2003,107.13],[2004,102.68],[2005,117.88],[2006,119.02],[2007,111.71],[2008,90.79],[2009,93.08],[2010,81.67],
 [2011,76.98],[2012,86.64],[2013,105.25],[2014,119.85],[2015,120.27],[2016,116.78],[2017,112.69],[2018,109.7],
 [2019,108.67],[2020,103.19],[2021,115.17],[2022,131.81],[2023,140.92],[2024,157.37],[2025,156.8]
+];
+/* EX: [year, MSCI World ex USA グロス総収益・米ドル建て %] 出典: upmyinterest.com（1970-2011）／MSCI公式ファクトシート（2012-2025） */
+var EX=[
+[1970,-13.4],[1971,33.3],[1972,40.4],[1973,-10.7],[1974,-18.5],[1975,32.8],[1976,3.6],[1977,17.5],
+[1978,33.1],[1979,10.9],[1980,25.4],[1981,-2.5],[1982,-0.3],[1983,24.8],[1984,3.5],[1985,51.4],
+[1986,65.8],[1987,24.6],[1988,27.8],[1989,11.4],[1990,-22.8],[1991,12.4],[1992,-11.9],[1993,32.6],
+[1994,7.6],[1995,11.8],[1996,7.2],[1997,2.6],[1998,19.1],[1999,28.3],[2000,-13.2],[2001,-21.2],
+[2002,-15.5],[2003,40],[2004,20.8],[2005,15],[2006,26.2],[2007,12.9],[2008,-43.2],[2009,34.4],
+[2010,9.4],[2011,-11.8],[2012,17.02],[2013,21.57],[2014,-3.88],[2015,-2.6],[2016,3.29],[2017,24.81],
+[2018,-13.64],[2019,23.16],[2020,8.09],[2021,13.17],[2022,-13.82],[2023,18.6],[2024,5.26],[2025,32.55]
 ];
 
 var LIFETIME = 18000000, ANNUAL = 3600000, TAX = 0.20315;
@@ -550,29 +577,43 @@ TABS.forEach(function(t){
 var seed = 20260903, mode = load("mode","hist"), cur = load("cur","jpy");
 var FXMAP={}; FX.forEach(function(p){FXMAP[p[0]]=p[1]});
 var FX_FIRST=FX[0][0]+1;   /* 換算できる最初の年（前年末レートが要る） */
-var PERIODS={
-  jpy:[[1972,"1972年〜2025年（54年・変動相場制以降）"],
-       [1990,"1990年〜2025年（36年）"],
-       [2000,"2000年〜2025年（26年）"]],
-  usd:[[1928,"1928年〜2025年（98年・全期間）"],
-       [1946,"1946年〜2025年（戦後）"],
-       [1970,"1970年〜2025年（変動相場制以降）"],
-       [1990,"1990年〜2025年（36年）"]]
-};
+var EXMAP={}; EX.forEach(function(p){EXMAP[p[0]]=p[1]});
+var EX_FIRST=EX[0][0];     /* 米国以外の株式がある最初の年 */
+function periodList(){
+  if(cur==="jpy") return [[1972,"1972年〜2025年（54年・変動相場制以降）"],
+                          [1990,"1990年〜2025年（36年）"],
+                          [2000,"2000年〜2025年（26年）"]];
+  if(+$("#i-wus").value < 100)
+    return [[1970,"1970年〜2025年（56年・米国以外があるのはここから）"],
+            [1990,"1990年〜2025年（36年）"],
+            [2000,"2000年〜2025年（26年）"]];
+  return [[1928,"1928年〜2025年（98年・全期間）"],
+          [1946,"1946年〜2025年（戦後）"],
+          [1970,"1970年〜2025年（変動相場制以降）"],
+          [1990,"1990年〜2025年（36年）"]];
+}
 function populatePeriods(){
-  var sel=$("#i-period"), want=+sel.value||0, list=PERIODS[cur], has=false;
+  var sel=$("#i-period"), want=+sel.value||0, list=periodList(), has=false;
   sel.innerHTML=list.map(function(p){return '<option value="'+p[0]+'">'+p[1]+"</option>"}).join("");
   list.forEach(function(p){ if(p[0]===want) has=true });
   sel.value = has ? want : list[0][0];
 }
 
-function buildSeries(wStock, fromYear, currency){
-  var w = wStock/100, out = [], lo = fromYear;
+function buildSeries(wStock, wUs, fromYear, currency){
+  var w = wStock/100, u = wUs/100, out = [], lo = fromYear;
   if(currency==="jpy" && lo < FX_FIRST) lo = FX_FIRST;
+  if(u < 1 && lo < EX_FIRST) lo = EX_FIRST;
   for(var i=0;i<HIST.length;i++){
     var y=HIST[i][0];
     if(y < lo) continue;
-    var rUsd = (w*HIST[i][3] + (1-w)*HIST[i][2])/100;
+    var eq;
+    if(u >= 1){ eq = HIST[i][3]; }
+    else {
+      var exr = EXMAP[y];
+      if(exr === undefined) continue;
+      eq = u*HIST[i][3] + (1-u)*exr;
+    }
+    var rUsd = (w*eq + (1-w)*HIST[i][2])/100;
     if(currency==="jpy"){
       var f0=FXMAP[y-1], f1=FXMAP[y];
       if(!f0 || !f1) continue;
@@ -618,7 +659,7 @@ function simulate(o){
   var ser=null, sn=0, drift=0, sMonth=0;
 
   if(o.mode==="hist"){
-    ser=buildSeries(o.wStock,o.fromYear,o.cur); sn=ser.length;
+    ser=buildSeries(o.wStock,o.wUs,o.fromYear,o.cur); sn=ser.length;
   }else{
     var mu=o.ret/100, sigma=o.vol/100;
     sMonth=sigma/Math.sqrt(12);
@@ -767,7 +808,8 @@ function readSim(){
     monthly:+$("#i-monthly").value, years:+$("#i-years").value,
     fee:+$("#i-fee").value, trials:+$("#i-trials").value,
     ret:+$("#i-ret").value, vol:+$("#i-vol").value,
-    wStock:+$("#i-wstock").value, fromYear:+$("#i-period").value, block:+$("#i-block").value
+    wStock:+$("#i-wstock").value, wUs:+$("#i-wus").value,
+    fromYear:+$("#i-period").value, block:+$("#i-block").value
   };
 }
 
@@ -779,6 +821,10 @@ function renderSim(){
   $("#v-vol").textContent=o.vol.toFixed(1)+" %";
   $("#v-fee").textContent=trim5(o.fee)+" %";
   $("#v-wstock").textContent="株式 "+o.wStock+"％ ／ 国債 "+(100-o.wStock)+"％";
+  $("#v-wus").textContent="米国 "+o.wUs+"％ ／ 米国以外 "+(100-o.wUs)+"％";
+  [["p-us",100],["p-world",74],["p-exus",0]].forEach(function(p){
+    document.getElementById(p[0]).setAttribute("aria-pressed", o.wUs===p[1]?"true":"false");
+  });
   $("#hist-fields").hidden = (mode!=="hist");
   $("#c-jpy").setAttribute("aria-pressed", cur==="jpy"?"true":"false");
   $("#c-usd").setAttribute("aria-pressed", cur==="usd"?"true":"false");
@@ -786,7 +832,7 @@ function renderSim(){
   $("#hist-card").hidden = (mode!=="hist");
   $("#m-hist").setAttribute("aria-pressed", mode==="hist"?"true":"false");
   $("#m-param").setAttribute("aria-pressed", mode==="hist"?"false":"true");
-  ["monthly","years","ret","vol","fee","trials","wstock","period","block"].forEach(function(k){
+  ["monthly","years","ret","vol","fee","trials","wstock","wus","period","block"].forEach(function(k){
     save("sim_"+k, document.getElementById("i-"+k).value);
   });
   save("mode",mode); save("cur",cur);
@@ -809,11 +855,15 @@ function renderSim(){
       hs("マイナスの年",s.neg+" / "+s.n+"年",(s.neg/s.n*100).toFixed(0)+"% の確率")+
       (jp ? hs("うち為替",(s.gmFx*100).toFixed(2)+"%","ドル建ては"+(s.gmUsd*100).toFixed(2)+"%")
           : hs("元本割れ",(r.loss[n]*100).toFixed(1)+"%",n+"年後の試行のうち"));
-    $("#hist-src").innerHTML='S&amp;P500（配当込み）'+o.wStock+'％＋米10年国債'+(100-o.wStock)+
+    var eqTxt = o.wUs>=100 ? 'S&amp;P500（配当込み）'
+              : o.wUs<=0   ? 'MSCI World ex USA（配当込み）'
+              : 'S&amp;P500 '+o.wUs+'％＋MSCI World ex USA '+(100-o.wUs)+'％（いずれも配当込み）';
+    $("#hist-src").innerHTML='株式［'+eqTxt+'］'+o.wStock+'％＋米10年国債'+(100-o.wStock)+
       '％を、'+s.from+'〜'+s.to+'年の実績から'+(o.block>1?o.block+'年ずつ連続で':'1年ずつ')+'抽出。'+
       (jp ? '各年のドル建てリターンに<b>その年に実際に起きたドル円の変動</b>を掛けて円建てに換算しています（株・債券・為替は同じ年をまとめて抽出）。'
           : '<b>為替がずっと一定だったと仮定した参考値</b>で、円で積み立てる実態とは合いません。')+
       '出典：<a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Damodaran, NYU Stern</a>'+
+      (o.wUs<100?'／<a href="https://www.msci.com/documents/10199/255599/msci-world-ex-usa-index.pdf" target="_blank" rel="noopener">MSCI World ex USA</a>':'')+
       (jp?'／<a href="https://fred.stlouisfed.org/series/DEXJPUS" target="_blank" rel="noopener">FRED DEXJPUS</a>':'')+'。';
   }
 
@@ -843,11 +893,17 @@ function renderSim(){
 $("#m-hist").addEventListener("click",function(){mode="hist";renderSim()});
 $("#c-jpy").addEventListener("click",function(){cur="jpy";populatePeriods();renderSim()});
 $("#c-usd").addEventListener("click",function(){cur="usd";populatePeriods();renderSim()});
+[["p-us",100],["p-world",74],["p-exus",0]].forEach(function(p){
+  document.getElementById(p[0]).addEventListener("click",function(){
+    $("#i-wus").value=p[1]; populatePeriods(); renderSim();
+  });
+});
+$("#i-wus").addEventListener("input",function(){populatePeriods()});
 $("#m-param").addEventListener("click",function(){mode="param";renderSim()});
 $("#b-reseed").addEventListener("click",function(){seed=(seed*1103515245+12345)>>>0;renderSim()});
 $("#b-reset").addEventListener("click",function(){
   var d={"i-monthly":50000,"i-years":25,"i-ret":5,"i-vol":18,"i-fee":0.05775,
-         "i-trials":2000,"i-wstock":100,"i-block":5};
+         "i-trials":2000,"i-wstock":100,"i-wus":74,"i-block":5};
   Object.keys(d).forEach(function(k){document.getElementById(k).value=d[k]});
   mode="hist"; cur="jpy"; seed=20260903;
   populatePeriods(); $("#i-period").value=1972; renderSim();
@@ -1078,7 +1134,7 @@ $("#rank-in").addEventListener("click",function(e){
 /* ---------- restore ---------- */
 (function(){
   populatePeriods();
-  ["monthly","years","ret","vol","fee","trials","wstock","period","block"].forEach(function(k){
+  ["monthly","years","ret","vol","fee","trials","wstock","wus","period","block"].forEach(function(k){
     var v=load("sim_"+k,null); if(v!==null) document.getElementById("i-"+k).value=v;
   });
   [["c-monthly","cost_monthly"],["c-years","cost_years"],["c-ret","cost_ret"]].forEach(function(p){
