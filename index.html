@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>html{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>NISA 試算盤</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;900&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#f6f8fa; --surface-3:#eceff3;
+  --line:#d6dde4; --line-strong:#b2bdc8;
+  --ink:#111a22; --ink-2:#4c5762; --ink-3:#78838f;
+  --accent:#1b4a72; --accent-2:#2a6fa8; --on-accent:#ffffff;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4;
+  --band-outer:rgba(42,120,214,.14); --band-inner:rgba(42,120,214,.28);
+  --grid:rgba(17,26,34,.09);
+  --shadow:0 1px 2px rgba(17,26,34,.05), 0 8px 24px -16px rgba(17,26,34,.28);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --serif:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0c1116; --surface:#141b23; --surface-2:#1a232d; --surface-3:#212c37;
+    --line:#27323d; --line-strong:#3b4956;
+    --ink:#e9eef3; --ink-2:#a6b2be; --ink-3:#76828e;
+    --accent:#7fb0dd; --accent-2:#93bee6; --on-accent:#0c1116;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+    --band-outer:rgba(57,135,229,.18); --band-inner:rgba(57,135,229,.36);
+    --grid:rgba(233,238,243,.10);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0c1116; --surface:#141b23; --surface-2:#1a232d; --surface-3:#212c37;
+  --line:#27323d; --line-strong:#3b4956;
+  --ink:#e9eef3; --ink-2:#a6b2be; --ink-3:#76828e;
+  --accent:#7fb0dd; --accent-2:#93bee6; --on-accent:#0c1116;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+  --band-outer:rgba(57,135,229,.18); --band-inner:rgba(57,135,229,.36);
+  --grid:rgba(233,238,243,.10);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+.app{max-width:1180px;margin:0 auto;padding:0 20px 72px}
+
+.masthead{padding:38px 0 0}
+.mast-top{display:flex;gap:18px;align-items:flex-start}
+.mast-rule{width:3px;align-self:stretch;min-height:64px;background:var(--accent);flex:none}
+h1{font-family:var(--serif);font-weight:900;font-size:clamp(28px,4.2vw,40px);
+  line-height:1.25;letter-spacing:.14em;margin:0;text-wrap:balance;color:var(--ink)}
+.mast-sub{margin:6px 0 0;color:var(--ink-2);font-size:14px;letter-spacing:.02em}
+.mast-note{margin:20px 0 0;padding:11px 14px;border:1px solid var(--line);
+  border-left:3px solid var(--line-strong);background:var(--surface-2);
+  color:var(--ink-2);font-size:12.5px;line-height:1.7;border-radius:2px}
+.mast-note b{color:var(--ink);font-weight:700}
+.double-rule{margin:22px 0 0;border-top:1px solid var(--line-strong);
+  border-bottom:1px solid var(--line-strong);height:3px}
+
+.tabs{display:flex;gap:2px;margin:20px 0 24px;flex-wrap:wrap}
+.tab{appearance:none;border:1px solid var(--line);background:var(--surface-2);
+  color:var(--ink-2);font-family:var(--sans);font-size:13.5px;font-weight:500;
+  padding:9px 18px;cursor:pointer;border-radius:2px;letter-spacing:.04em;
+  transition:background .15s,color .15s,border-color .15s}
+.tab:hover{background:var(--surface);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.tab:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+
+.split{display:grid;grid-template-columns:326px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+  box-shadow:var(--shadow);min-width:0}
+.card-h{font-family:var(--serif);font-weight:600;font-size:14px;letter-spacing:.18em;
+  margin:0;padding:14px 18px;border-bottom:1px solid var(--line);color:var(--ink)}
+.card-b{padding:18px}
+.stack{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+.segmented{display:flex;gap:2px;margin-bottom:4px}
+.seg{flex:1;appearance:none;border:1px solid var(--line);background:var(--surface-2);
+  color:var(--ink-2);font-family:var(--sans);font-size:12.5px;font-weight:500;
+  padding:9px 6px;cursor:pointer;border-radius:2px;transition:background .15s,color .15s}
+.seg:hover{background:var(--surface-3);color:var(--ink)}
+.seg[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.seg:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+
+.field{display:flex;flex-direction:column;gap:7px;padding:13px 0;border-bottom:1px dotted var(--line)}
+.field:last-child{border-bottom:0;padding-bottom:2px}
+.field-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.field-label{font-size:12px;letter-spacing:.09em;color:var(--ink-2);font-weight:500}
+.field-val{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--accent-2);height:20px;margin:0;cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
+.hint{font-size:11.5px;color:var(--ink-3);line-height:1.6;margin:0}
+.warn{margin-top:14px;padding:10px 12px;border:1px solid var(--s4);border-radius:2px;
+  background:var(--surface-2);font-size:12px;color:var(--ink);line-height:1.65}
+select,input[type=text],input[type=number]{font-family:var(--mono);font-size:13px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line);
+  border-radius:2px;padding:6px 8px;width:100%;font-variant-numeric:tabular-nums}
+input[type=text]{font-family:var(--sans)}
+select:focus-visible,input:focus-visible{outline:2px solid var(--accent-2);outline-offset:1px}
+.btn{appearance:none;font-family:var(--sans);font-size:12.5px;font-weight:500;
+  letter-spacing:.05em;padding:8px 14px;border:1px solid var(--line-strong);
+  background:var(--surface-2);color:var(--ink);border-radius:2px;cursor:pointer;
+  transition:background .15s}
+.btn:hover{background:var(--surface-3)}
+.btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+  padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--tint,var(--line-strong))}
+.tile-k{font-size:11.5px;letter-spacing:.07em;color:var(--ink-2);display:block}
+.tile-v{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-.01em;
+  color:var(--ink);font-variant-numeric:tabular-nums;display:block;margin-top:3px;line-height:1.25}
+.tile-s{font-size:11px;color:var(--ink-3);display:block;margin-top:2px}
+
+.hstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:16px}
+.hs-k{font-size:11px;color:var(--ink-2);letter-spacing:.05em;display:block}
+.hs-v{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums;display:block;line-height:1.35}
+.hs-s{font-size:10.5px;color:var(--ink-3);display:block}
+.src{font-size:11.5px;color:var(--ink-3);margin:16px 0 0;padding-top:13px;
+  border-top:1px dotted var(--line);line-height:1.75}
+.src a{color:var(--accent-2);text-decoration:underline;text-underline-offset:2px}
+.src a:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+.src b{color:var(--ink-2)}
+
+.chart-wrap{position:relative}
+svg.chart{display:block;width:100%;height:auto;touch-action:pan-y}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:0 18px 16px;font-size:12px;color:var(--ink-2)}
+.lg{display:inline-flex;align-items:center;gap:7px}
+.lg-sw{width:14px;height:3px;border-radius:2px;flex:none}
+.lg-sw.band{height:11px;border-radius:2px}
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface);border:1px solid var(--line-strong);border-radius:3px;
+  box-shadow:var(--shadow);padding:9px 11px;font-size:12px;min-width:172px;z-index:5}
+.tip.on{opacity:1}
+.tip-h{font-family:var(--mono);font-weight:600;font-size:12px;color:var(--ink);
+  padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.tip-r{display:flex;justify-content:space-between;gap:14px;line-height:1.85}
+.tip-r span:first-child{color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.tip-r span:last-child{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:2px;flex:none}
+
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11.5px;letter-spacing:.06em;color:var(--ink-2);font-weight:500;
+  border-bottom:1px solid var(--line-strong);text-align:right;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+td input{padding:5px 7px;font-size:12.5px}
+td input[type=number]{width:88px;text-align:right}
+td input[type=text]{width:210px}
+#room-tbl{min-width:0}
+.del{appearance:none;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-3);
+  width:24px;height:24px;line-height:1;border-radius:2px;cursor:pointer;font-size:14px}
+.del:hover{color:var(--ink);border-color:var(--line-strong)}
+
+.sect-note{font-size:12px;color:var(--ink-3);padding:0 18px 16px;line-height:1.7}
+.sect-note b{color:var(--ink-2)}
+.formula{font-family:var(--mono);font-size:12px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:2px;padding:11px 13px;color:var(--ink-2);
+  overflow-x:auto;white-space:nowrap;margin:0}
+footer{margin-top:44px;border-top:1px solid var(--line);padding-top:18px}
+details summary{cursor:pointer;font-size:13px;color:var(--ink-2);font-weight:500;letter-spacing:.04em}
+details summary:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
+details[open] summary{margin-bottom:10px}
+.fine{font-size:12px;color:var(--ink-3);line-height:1.85}
+.fine ul{padding-left:1.2em;margin:6px 0}
+.fine b{color:var(--ink-2)}
+.fine a{color:var(--accent-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+<header class="masthead">
+  <div class="mast-top">
+    <div class="mast-rule"></div>
+    <div class="mast-body">
+      <h1>NISA 試算盤</h1>
+      <p class="mast-sub">1928年からの実績データで回す、積立・コスト・序列の三つの計算盤</p>
+    </div>
+  </div>
+  <p class="mast-note"><b>これは計算ツールであって、投資助言ではありません。</b>表示される数字は、実績データとあなたが入力した前提から機械的に計算した結果です。将来の運用成果を予測・保証するものではなく、特定の銘柄を推奨するものでもありません。</p>
+  <div class="double-rule"></div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="計算盤の切り替え">
+  <button class="tab" role="tab" id="tab-sim"  aria-controls="panel-sim"  aria-selected="true">積立シミュレーション</button>
+  <button class="tab" role="tab" id="tab-cost" aria-controls="panel-cost" aria-selected="false">信託報酬の生涯コスト</button>
+  <button class="tab" role="tab" id="tab-rank" aria-controls="panel-rank" aria-selected="false">銘柄の序列</button>
+</nav>
+
+<main>
+<section class="panel" id="panel-sim" role="tabpanel" aria-labelledby="tab-sim">
+  <div class="split">
+    <div class="card">
+      <h2 class="card-h">前 提</h2>
+      <div class="card-b">
+        <div class="segmented" role="group" aria-label="リターンの決め方">
+          <button class="seg" id="m-hist"  aria-pressed="true">実績データから抽出</button>
+          <button class="seg" id="m-param" aria-pressed="false">パラメータ指定</button>
+        </div>
+
+        <div id="hist-fields">
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="i-wstock">資産配分</label><span class="field-val" id="v-wstock"></span></div>
+            <input type="range" id="i-wstock" min="0" max="100" step="5" value="100">
+            <p class="hint">株式（S&amp;P500）と米国10年国債の比率。同じ年の両方を同時に抽出するので、実際に起きた株と債券の連動関係がそのまま残ります。</p>
+          </div>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="i-period">使う期間</label></div>
+            <select id="i-period">
+              <option value="1928">1928年〜2025年（98年・全期間）</option>
+              <option value="1946">1946年〜2025年（戦後）</option>
+              <option value="1970" selected>1970年〜2025年（変動相場制以降）</option>
+              <option value="1990">1990年〜2025年（直近36年）</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="i-block">抽出のしかた</label></div>
+            <select id="i-block">
+              <option value="1">1年ずつバラバラに抽出</option>
+              <option value="5" selected>連続する5年をまとめて抽出</option>
+              <option value="10">連続する10年をまとめて抽出</option>
+            </select>
+            <p class="hint">まとめて抽出すると、暴落の翌年に何が起きたかという「並び順」も一緒に再現されます。</p>
+          </div>
+        </div>
+
+        <div id="param-fields" hidden>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="i-ret">期待リターン（年率）</label><span class="field-val" id="v-ret"></span></div>
+            <input type="range" id="i-ret" min="-2" max="12" step="0.1" value="5.0">
+          </div>
+          <div class="field">
+            <div class="field-top"><label class="field-label" for="i-vol">想定ボラティリティ（年率）</label><span class="field-val" id="v-vol"></span></div>
+            <input type="range" id="i-vol" min="0" max="35" step="0.5" value="18">
+            <p class="hint">0 にすると乱れのない単純な複利計算になります。</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="i-monthly">毎月の積立額</label><span class="field-val" id="v-monthly"></span></div>
+          <input type="range" id="i-monthly" min="0" max="300000" step="5000" value="50000">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="i-years">積立期間</label><span class="field-val" id="v-years"></span></div>
+          <input type="range" id="i-years" min="1" max="40" step="1" value="25">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="i-fee">信託報酬（年率）</label><span class="field-val" id="v-fee"></span></div>
+          <input type="range" id="i-fee" min="0" max="2" step="0.00005" value="0.05775">
+          <p class="hint">初期値はeMAXIS Slim 全世界株式（オール・カントリー）の実際の信託報酬です。</p>
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="i-trials">試行回数</label></div>
+          <select id="i-trials">
+            <option value="500">500 回</option>
+            <option value="2000" selected>2,000 回</option>
+            <option value="5000">5,000 回</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="b-reseed">引き直す</button>
+          <button class="btn" id="b-reset">初期値に戻す</button>
+        </div>
+        <div id="sim-warn"></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="tiles" id="sim-tiles"></div>
+
+      <div class="card" id="hist-card">
+        <h2 class="card-h">抽出元の実績データ</h2>
+        <div class="card-b">
+          <div class="hstats" id="hist-stats"></div>
+          <p class="src" id="hist-src"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-h">税引後の資産額の推移</h2>
+        <div class="chart-wrap" id="fan-wrap">
+          <svg class="chart" id="fan-svg" viewBox="0 0 780 380" role="img" aria-label="積立資産額の試算"></svg>
+          <div class="tip" id="fan-tip"></div>
+        </div>
+        <div class="legend" id="fan-legend"></div>
+        <p class="sect-note">帯は試行結果のばらつきです。濃い帯に半分（25〜75%）、淡い帯まで含めて8割（10〜90%）の試行が収まります。<b>中央値はあくまで真ん中の1本であって、当たる保証のある線ではありません。</b></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-h">非課税枠の消化</h2>
+        <div class="card-b">
+          <div class="tbl-scroll"><table id="room-tbl"><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost" hidden>
+  <div class="split">
+    <div class="card">
+      <h2 class="card-h">前 提</h2>
+      <div class="card-b">
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="c-monthly">毎月の積立額</label><span class="field-val" id="cv-monthly"></span></div>
+          <input type="range" id="c-monthly" min="0" max="300000" step="5000" value="50000">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="c-years">積立期間</label><span class="field-val" id="cv-years"></span></div>
+          <input type="range" id="c-years" min="1" max="40" step="1" value="30">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="c-ret">期待リターン（年率・信託報酬控除前）</label><span class="field-val" id="cv-ret"></span></div>
+          <input type="range" id="c-ret" min="0" max="12" step="0.1" value="5.0">
+          <p class="hint">ばらつきを入れず、全ファンド同じ複利で回した場合の比較です。差はまるごと信託報酬の差になります。</p>
+        </div>
+        <div class="btn-row"><button class="btn" id="c-add">ファンドを追加</button></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2 class="card-h">比較するファンド</h2>
+        <div class="card-b">
+          <div class="tbl-scroll">
+            <table id="cost-tbl">
+              <thead><tr><th>ファンド</th><th>信託報酬</th><th>最終評価額</th><th>最安との差</th><th>生涯コスト</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="src">信託報酬は<b>実データ</b>（税込・2026年8月31日時点）。出典：日本経済新聞 投資信託
+            <a href="https://www.nikkei.com/nkd/fund/?fcode=0331418A" target="_blank" rel="noopener">オルカン</a>／
+            <a href="https://www.nikkei.com/nkd/fund/?fcode=03311187" target="_blank" rel="noopener">S&amp;P500</a>／
+            <a href="https://www.nikkei.com/nkd/fund/?fcode=03319172" target="_blank" rel="noopener">先進国株式</a>／
+            <a href="https://www.nikkei.com/nkd/fund/?fcode=03317172" target="_blank" rel="noopener">国内株式</a>／
+            <a href="https://www.nikkei.com/nkd/fund/?fcode=03312175" target="_blank" rel="noopener">8資産均等</a>。
+            実質コストは売買委託手数料などを含むため、この信託報酬より高くなります。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-h">積立期間中に支払う信託報酬の総額</h2>
+        <div class="chart-wrap" id="cost-wrap">
+          <svg class="chart" id="cost-svg" viewBox="0 0 780 260" role="img" aria-label="ファンド別の生涯コスト"></svg>
+        </div>
+        <p class="sect-note">信託報酬は残高に対して毎日かかるため、資産が育つほど絶対額が膨らみます。年率0.1%の差が、期間の終わりには数十万円単位の差として出てきます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="panel-rank" role="tabpanel" aria-labelledby="tab-rank" hidden>
+  <div class="split">
+    <div class="card">
+      <h2 class="card-h">評価軸の重み</h2>
+      <div class="card-b">
+        <p class="hint" style="margin-bottom:4px">重みを動かすと順位が変わります。順位を決めているのはこの5本のつまみであって、ツールの意見ではありません。</p>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="w-cost">低コスト（信託報酬の低さ）</label><span class="field-val" id="wv-cost"></span></div>
+          <input type="range" id="w-cost" min="0" max="10" step="1" value="5">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="w-ret">リターン</label><span class="field-val" id="wv-ret"></span></div>
+          <input type="range" id="w-ret" min="0" max="10" step="1" value="3">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="w-risk">低リスク（ボラティリティの低さ）</label><span class="field-val" id="wv-risk"></span></div>
+          <input type="range" id="w-risk" min="0" max="10" step="1" value="3">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="w-sharpe">シャープレシオ</label><span class="field-val" id="wv-sharpe"></span></div>
+          <input type="range" id="w-sharpe" min="0" max="10" step="1" value="3">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="w-size">純資産規模</label><span class="field-val" id="wv-size"></span></div>
+          <input type="range" id="w-size" min="0" max="10" step="1" value="2">
+        </div>
+        <div class="field">
+          <div class="field-top"><label class="field-label" for="w-rf">無リスク金利（シャープ計算用）</label><span class="field-val" id="wv-rf"></span></div>
+          <input type="range" id="w-rf" min="0" max="3" step="0.05" value="0.5">
+        </div>
+        <div class="btn-row"><button class="btn" id="r-add">銘柄を追加</button></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2 class="card-h">入力値</h2>
+        <div class="card-b">
+          <p class="mast-note" style="margin:0 0 14px"><b>信託報酬と純資産は実データ、リターンとボラティリティは目安値です。</b>後者2列は検証していないので、各ファンドの月次レポートの数値に置き換えてから順位を読んでください。</p>
+          <div class="tbl-scroll">
+            <table id="rank-in">
+              <thead><tr><th>銘柄名</th><th>信託報酬 %</th><th>純資産 億円</th><th>年率リターン %</th><th>年率ボラ %</th><th>シャープ</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="src">信託報酬・純資産総額は<b>実データ</b>（税込、純資産は2026年8月31日時点）。出典：日本経済新聞 投資信託の各ファンドページ。年率リターン・ボラティリティは編集して使う前提の初期値で、出典はありません。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-h">重み付けスコアによる序列</h2>
+        <div class="chart-wrap" id="rank-wrap">
+          <svg class="chart" id="rank-svg" role="img" aria-label="銘柄別の重み付けスコア"></svg>
+          <div class="tip" id="rank-tip"></div>
+        </div>
+        <div class="legend" id="rank-legend"></div>
+        <div class="card-b" style="padding-top:0">
+          <pre class="formula" id="rank-formula"></pre>
+          <p class="sect-note" style="padding:12px 0 0">各指標は入力した銘柄の中での最小値を0点、最大値を100点として正規化しています。<b>比較対象を入れ替えれば点数は変わります</b>——絶対評価ではなく、この表に載せた銘柄同士の相対評価です。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <details>
+    <summary>データの出典と、この試算が扱っていないこと</summary>
+    <div class="fine">
+      <ul>
+        <li><b>リターンの実績データ：</b>Aswath Damodaran（ニューヨーク大学スターン経営大学院）が公開する
+          <a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Historical Returns on Stocks, Bonds and Bills</a>
+          の年次系列。S&amp;P500のトータルリターン（配当込み）、米10年国債、3ヶ月T-Billを1928年から2025年まで98年分そのまま収録しています。株式と債券は<b>同じ年をペアで抽出</b>するため、両者の実際の相関が保たれます。</li>
+        <li><b>ファンドの信託報酬・純資産総額：</b>日本経済新聞の投資信託ページ（2026年8月31日時点、信託報酬は税込）。</li>
+        <li><b>米ドル建てであること：</b>上の実績データは米ドル建てです。円で投資する場合の為替変動は含まれていません。円安局面では円建てリターンはこれより高く、円高局面では低くなります。</li>
+        <li><b>年次データを月に割ること：</b>抽出した年間リターンを12等分の複利に均して積立に当てているため、年の途中の値動きは平滑化されています。年内の高値・安値は再現されません。</li>
+        <li><b>過去は将来ではないこと：</b>ブートストラップは「過去に実際に起きた年が、これからも同じ確率で起きる」という仮定を置いています。1928年以降に一度も起きていない事態は、この試算には決して現れません。</li>
+        <li><b>制度：</b>2024年開始の新NISA。つみたて投資枠 年120万円、成長投資枠 年240万円（合計 年360万円）、生涯非課税保有限度額 1,800万円（取得価額ベース）、非課税保有期間は無期限。積立は各年1月開始、年間枠は毎年1月にリセットする想定です。</li>
+        <li><b>枠の溢れ：</b>年間360万円または生涯1,800万円を超える分は課税口座（特定口座）に積み立てたものとして扱い、その売却益に20.315%を課税します。課税口座は「期間の最後に全額売却して一括課税」という単純化をしています。</li>
+        <li><b>信託報酬：</b>毎月末に残高へ乗じて控除。売買委託手数料などの隠れコストは含みません。実質コストは目論見書の信託報酬より高くなるのが普通です。</li>
+        <li><b>表示金額：</b>すべて名目値です。物価上昇を差し引いた実質的な購買力ではありません。</li>
+        <li><b>扱っていないこと：</b>個別銘柄の推奨、あなたの家計・年齢・リスク許容度をふまえた判断、税務・法務上の助言。これらは有資格の専門家の領域です。</li>
+      </ul>
+    </div>
+  </details>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* HIST: [year, 3ヶ月T-Bill, 米10年国債, S&P500トータルリターン] — 単位%
+   出典: Aswath Damodaran (NYU Stern), Historical Returns on Stocks, Bonds and Bills 1928-2025 */
+var HIST=[
+[1928,3.08,0.84,43.81],[1929,3.16,4.20,-8.30],[1930,4.55,4.54,-25.12],[1931,2.31,-2.56,-43.84],[1932,1.07,8.79,-8.64],[1933,0.96,1.86,49.98],[1934,0.28,7.96,-1.19],
+[1935,0.17,4.47,46.74],[1936,0.17,5.02,31.94],[1937,0.28,1.38,-35.34],[1938,0.07,4.21,29.28],[1939,0.05,4.41,-1.10],[1940,0.04,5.40,-10.67],[1941,0.13,-2.02,-12.77],
+[1942,0.34,2.29,19.17],[1943,0.38,2.49,25.06],[1944,0.38,2.58,19.03],[1945,0.38,3.80,35.82],[1946,0.38,3.13,-8.43],[1947,0.60,0.92,5.20],[1948,1.05,1.95,5.70],
+[1949,1.12,4.66,18.30],[1950,1.20,0.43,30.81],[1951,1.52,-0.30,23.68],[1952,1.72,2.27,18.15],[1953,1.89,4.14,-1.21],[1954,0.94,3.29,52.56],[1955,1.72,-1.34,32.60],
+[1956,2.62,-2.26,7.44],[1957,3.22,6.80,-10.46],[1958,1.77,-2.10,43.72],[1959,3.39,-2.65,12.06],[1960,2.87,11.64,0.34],[1961,2.35,2.06,26.64],[1962,2.77,5.69,-8.81],
+[1963,3.16,1.68,22.61],[1964,3.55,3.73,16.42],[1965,3.95,0.72,12.40],[1966,4.86,2.91,-9.97],[1967,4.29,-1.58,23.80],[1968,5.34,3.27,10.81],[1969,6.67,-5.01,-8.24],
+[1970,6.39,16.75,3.56],[1971,4.33,9.79,14.22],[1972,4.06,2.82,18.76],[1973,7.04,3.66,-14.31],[1974,7.85,1.99,-25.90],[1975,5.79,3.61,37.00],[1976,4.98,15.98,23.83],
+[1977,5.26,1.29,-6.98],[1978,7.18,-0.78,6.51],[1979,10.05,0.67,18.52],[1980,11.39,-2.99,31.74],[1981,14.04,8.20,-4.70],[1982,11.09,32.81,20.42],[1983,8.95,3.20,22.34],
+[1984,9.92,13.73,6.15],[1985,7.72,25.71,31.24],[1986,6.15,24.28,18.49],[1987,5.96,-4.96,5.81],[1988,6.89,8.22,16.54],[1989,8.39,17.69,31.48],[1990,7.75,6.24,-3.06],
+[1991,5.54,15.00,30.23],[1992,3.51,9.36,7.49],[1993,3.07,14.21,9.97],[1994,4.37,-8.04,1.33],[1995,5.66,23.48,37.20],[1996,5.15,1.43,22.68],[1997,5.20,9.94,33.10],
+[1998,4.91,14.92,28.34],[1999,4.78,-8.25,20.89],[2000,6.00,16.66,-9.03],[2001,3.48,5.57,-11.85],[2002,1.64,15.12,-21.97],[2003,1.03,0.38,28.36],[2004,1.40,4.49,10.74],
+[2005,3.22,2.87,4.83],[2006,4.85,1.96,15.61],[2007,4.48,10.21,5.48],[2008,1.40,20.10,-36.55],[2009,0.15,-11.12,25.94],[2010,0.14,8.46,14.82],[2011,0.05,16.04,2.10],
+[2012,0.09,2.97,15.89],[2013,0.06,-9.10,32.15],[2014,0.03,10.75,13.52],[2015,0.05,1.28,1.38],[2016,0.32,0.69,11.77],[2017,0.95,2.80,21.61],[2018,1.97,-0.02,-4.23],
+[2019,2.11,9.64,31.21],[2020,0.36,11.33,18.02],[2021,0.04,-4.42,28.47],[2022,2.09,-17.83,-18.04],[2023,5.28,3.88,26.06],[2024,5.18,-1.64,24.88],[2025,4.21,7.80,17.78]
+];
+
+var LIFETIME = 18000000, ANNUAL = 3600000, TAX = 0.20315;
+var $ = function(s){return document.querySelector(s)};
+var LS = "nisa-shisanban-v2";
+
+function yen(v){
+  var a = Math.abs(v);
+  if(a >= 1e8) return (v/1e8).toFixed(2) + "億円";
+  if(a >= 1e4) return Math.round(v/1e4).toLocaleString("ja-JP") + "万円";
+  return Math.round(v).toLocaleString("ja-JP") + "円";
+}
+function yenShort(v){
+  var a = Math.abs(v);
+  if(a >= 1e8) return (v/1e8).toFixed(1) + "億";
+  return Math.round(v/1e4).toLocaleString("ja-JP") + "万";
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){var u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function pctl(sorted,p){
+  var n = sorted.length; if(n===1) return sorted[0];
+  var i = (n-1)*p, lo = Math.floor(i), hi = Math.ceil(i);
+  return sorted[lo] + (sorted[hi]-sorted[lo])*(i-lo);
+}
+function niceAxis(vmax,n){
+  if(vmax<=0) return {step:1,max:n};
+  var raw = vmax/n, mag = Math.pow(10,Math.floor(Math.log10(raw))), norm = raw/mag, step;
+  if(norm<=1)step=1; else if(norm<=2)step=2; else if(norm<=2.5)step=2.5; else if(norm<=5)step=5; else step=10;
+  step*=mag;
+  return {step:step, max:step*Math.ceil(vmax/step)};
+}
+function trim5(v){var s=v.toFixed(5);if(s.indexOf(".")>=0)s=s.replace(/0+$/,"").replace(/\.$/,"");return s}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function save(k,v){try{var o=JSON.parse(localStorage.getItem(LS)||"{}");o[k]=v;localStorage.setItem(LS,JSON.stringify(o))}catch(e){}}
+function load(k,d){try{var o=JSON.parse(localStorage.getItem(LS)||"{}");return (k in o)?o[k]:d}catch(e){return d}}
+
+/* ---------- tabs ---------- */
+var TABS = [["tab-sim","panel-sim"],["tab-cost","panel-cost"],["tab-rank","panel-rank"]];
+TABS.forEach(function(t){
+  document.getElementById(t[0]).addEventListener("click",function(){
+    TABS.forEach(function(u){
+      var sel = u[0]===t[0];
+      document.getElementById(u[0]).setAttribute("aria-selected",sel?"true":"false");
+      document.getElementById(u[1]).hidden = !sel;
+    });
+    save("tab",t[0]);
+    if(t[0]==="tab-cost") renderCost();
+    if(t[0]==="tab-rank") renderRank();
+  });
+});
+
+/* =======================================================================
+   TAB 1 — historical bootstrap / parametric monte carlo
+   ======================================================================= */
+var seed = 20260903, mode = load("mode","hist");
+
+function buildSeries(wStock, fromYear){
+  var w = wStock/100, out = [];
+  for(var i=0;i<HIST.length;i++){
+    if(HIST[i][0] < fromYear) continue;
+    out.push({y:HIST[i][0], r:(w*HIST[i][3] + (1-w)*HIST[i][2])/100});
+  }
+  return out;
+}
+function seriesStats(ser){
+  var n=ser.length, prod=1, sum=0, i;
+  for(i=0;i<n;i++){prod*=(1+ser[i].r); sum+=ser[i].r}
+  var am=sum/n, gm=Math.pow(prod,1/n)-1, v=0;
+  for(i=0;i<n;i++) v+=(ser[i].r-am)*(ser[i].r-am);
+  var sd=Math.sqrt(v/(n-1)), lo=ser[0], hi=ser[0], neg=0;
+  for(i=0;i<n;i++){ if(ser[i].r<lo.r)lo=ser[i]; if(ser[i].r>hi.r)hi=ser[i]; if(ser[i].r<0)neg++ }
+  return {n:n, gm:gm, am:am, sd:sd, worst:lo, best:hi, neg:neg, from:ser[0].y, to:ser[n-1].y};
+}
+
+function contributionSchedule(monthly, years){
+  var months=years*12, sN=new Float64Array(months), sT=new Float64Array(months);
+  var pN=0, used=0, capYear=null, total=0;
+  for(var m=0;m<months;m++){
+    if(m%12===0) used=0;
+    var toN=Math.min(monthly, Math.max(0,LIFETIME-pN), Math.max(0,ANNUAL-used));
+    sN[m]=toN; sT[m]=monthly-toN;
+    pN+=toN; used+=toN; total+=monthly;
+    if(capYear===null && pN>=LIFETIME-1) capYear=Math.floor(m/12)+1;
+  }
+  return {nisa:sN, tax:sT, pN:pN, total:total, capYear:capYear};
+}
+
+function simulate(o){
+  var months=o.years*12, N=o.trials, feeM=o.fee/100/12;
+  var sch=contributionSchedule(o.monthly,o.years);
+  var rng=mulberry32(seed);
+  var ser=null, sn=0, drift=0, sMonth=0;
+
+  if(o.mode==="hist"){
+    ser=buildSeries(o.wStock,o.fromYear); sn=ser.length;
+  }else{
+    var mu=o.ret/100, sigma=o.vol/100;
+    sMonth=sigma/Math.sqrt(12);
+    drift=(mu<=-0.999?-6:Math.log(1+mu))/12 - sMonth*sMonth/2;
+  }
+
+  var Y=o.years+1, y, k, mm;
+  var netAll=[], netTax=[];
+  for(y=0;y<Y;y++){ netAll.push(new Float64Array(N)); netTax.push(new Float64Array(N)); }
+
+  var yearFactor=new Float64Array(o.years);
+  for(k=0;k<N;k++){
+    if(o.mode==="hist"){
+      if(o.block<=1){
+        for(y=0;y<o.years;y++) yearFactor[y]=Math.pow(1+Math.max(ser[(rng()*sn)|0].r,-0.99),1/12);
+      }else{
+        y=0;
+        while(y<o.years){
+          var st=(rng()*sn)|0;
+          for(var b=0;b<o.block && y<o.years;b++,y++)
+            yearFactor[y]=Math.pow(1+Math.max(ser[(st+b)%sn].r,-0.99),1/12);
+        }
+      }
+    }
+    var bN=0,bT=0,cN=0,cT=0;
+    for(mm=0;mm<months;mm++){
+      var g = (o.mode==="hist") ? yearFactor[(mm/12)|0] : Math.exp(drift+sMonth*gauss(rng));
+      bN*=g; bT*=g;
+      bN-=bN*feeM; bT-=bT*feeM;
+      bN+=sch.nisa[mm]; cN+=sch.nisa[mm];
+      bT+=sch.tax[mm];  cT+=sch.tax[mm];
+      if((mm+1)%12===0){
+        var yi=(mm+1)/12, gross=bN+bT, cp=cN+cT;
+        netAll[yi][k]=bN+bT-Math.max(0,bT-cT)*TAX;
+        netTax[yi][k]=gross-Math.max(0,gross-cp)*TAX;
+      }
+    }
+  }
+
+  var res={years:o.years, principal:[], p10:[],p25:[],p50:[],p75:[],p90:[], taxOnly:[], loss:[],
+           capYear:sch.capYear, total:sch.total, pN:sch.pN, pT:sch.total-sch.pN,
+           stats: o.mode==="hist" ? seriesStats(ser) : null};
+  var cum=0;
+  for(y=0;y<Y;y++){
+    if(y>0) cum+=o.monthly*12;
+    res.principal.push(cum);
+    var a=Array.prototype.slice.call(netAll[y]).sort(function(x,z){return x-z});
+    var b=Array.prototype.slice.call(netTax[y]).sort(function(x,z){return x-z});
+    res.p10.push(pctl(a,.10)); res.p25.push(pctl(a,.25)); res.p50.push(pctl(a,.50));
+    res.p75.push(pctl(a,.75)); res.p90.push(pctl(a,.90));
+    res.taxOnly.push(pctl(b,.50));
+    var lost=0; for(k=0;k<N;k++) if(netAll[y][k]<cum) lost++;
+    res.loss.push(N?lost/N:0);
+  }
+  return res;
+}
+
+function drawFan(r){
+  var W=780,H=380,L=74,R=18,T=18,B=40;
+  var pw=W-L-R, ph=H-T-B, n=r.years;
+  var vmax=Math.max(r.p90[n], r.taxOnly[n], r.principal[n], 1);
+  var ax=niceAxis(vmax*1.04,5);
+  var X=function(i){return L+(n===0?0:pw*i/n)};
+  var Yc=function(v){return T+ph-ph*v/ax.max};
+  var o=[], i, v;
+  for(v=0; v<=ax.max+1e-6; v+=ax.step){
+    var yy=Yc(v);
+    o.push('<line x1="'+L+'" y1="'+yy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+yy.toFixed(1)+'" stroke="var(--grid)" stroke-width="1"/>');
+    o.push('<text x="'+(L-9)+'" y="'+(yy+4).toFixed(1)+'" text-anchor="end" font-family="var(--mono)" font-size="11" fill="var(--ink-3)">'+yenShort(v)+'</text>');
+  }
+  var xs = n<=10?1:5;
+  for(i=0;i<=n;i++){
+    if(i%xs!==0 && i!==n) continue;
+    o.push('<text x="'+X(i).toFixed(1)+'" y="'+(T+ph+21)+'" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--ink-3)">'+i+'</text>');
+  }
+  o.push('<text x="'+(L+pw/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="11" fill="var(--ink-3)">経過年数</text>');
+  function band(a,b,fill){
+    var d="M"+X(0)+" "+Yc(a[0]), j;
+    for(j=1;j<=n;j++) d+="L"+X(j).toFixed(1)+" "+Yc(a[j]).toFixed(1);
+    for(j=n;j>=0;j--) d+="L"+X(j).toFixed(1)+" "+Yc(b[j]).toFixed(1);
+    return '<path d="'+d+'Z" fill="'+fill+'"/>';
+  }
+  function line(a,color,w,dash){
+    var d="M"+X(0)+" "+Yc(a[0]), j;
+    for(j=1;j<=n;j++) d+="L"+X(j).toFixed(1)+" "+Yc(a[j]).toFixed(1);
+    return '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+w+'" stroke-linejoin="round" stroke-linecap="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  }
+  o.push(band(r.p10,r.p90,"var(--band-outer)"));
+  o.push(band(r.p25,r.p75,"var(--band-inner)"));
+  o.push(line(r.principal,"var(--ink-3)",1.5,"4 4"));
+  o.push(line(r.taxOnly,"var(--s2)",2));
+  o.push(line(r.p50,"var(--s1)",2.5));
+  o.push('<line x1="'+L+'" y1="'+(T+ph)+'" x2="'+(W-R)+'" y2="'+(T+ph)+'" stroke="var(--line-strong)" stroke-width="1"/>');
+  o.push('<g id="fan-cross" opacity="0"><line y1="'+T+'" y2="'+(T+ph)+'" stroke="var(--line-strong)" stroke-width="1"/>'+
+         '<circle r="4.5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/>'+
+         '<circle r="4.5" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/></g>');
+  $("#fan-svg").innerHTML=o.join("");
+
+  $("#fan-legend").innerHTML=
+    '<span class="lg"><span class="lg-sw" style="background:var(--s1)"></span>NISA活用（中央値）</span>'+
+    '<span class="lg"><span class="lg-sw" style="background:var(--s2)"></span>全額 課税口座（中央値・税引後）</span>'+
+    '<span class="lg"><span class="lg-sw band" style="background:var(--band-inner)"></span>25〜75%</span>'+
+    '<span class="lg"><span class="lg-sw band" style="background:var(--band-outer)"></span>10〜90%</span>'+
+    '<span class="lg"><span class="lg-sw" style="background:var(--ink-3)"></span>投入元本</span>';
+
+  var svg=$("#fan-svg"), tip=$("#fan-tip"), cross=svg.querySelector("#fan-cross");
+  svg.onpointermove=function(ev){
+    var bb=svg.getBoundingClientRect();
+    var px=(ev.clientX-bb.left)/bb.width*W;
+    var idx=Math.round((px-L)/(pw/(n||1)));
+    if(idx<0)idx=0; if(idx>n)idx=n;
+    var x=X(idx);
+    cross.setAttribute("opacity","1");
+    var ln=cross.querySelector("line"), c=cross.querySelectorAll("circle");
+    ln.setAttribute("x1",x); ln.setAttribute("x2",x);
+    c[0].setAttribute("cx",x); c[0].setAttribute("cy",Yc(r.p50[idx]));
+    c[1].setAttribute("cx",x); c[1].setAttribute("cy",Yc(r.taxOnly[idx]));
+    tip.innerHTML='<div class="tip-h">'+idx+' 年後</div>'+
+      '<div class="tip-r"><span><i class="dot" style="background:var(--s1)"></i>中央値</span><span>'+yen(r.p50[idx])+'</span></div>'+
+      '<div class="tip-r"><span><i class="dot" style="background:var(--band-inner)"></i>上位10%</span><span>'+yen(r.p90[idx])+'</span></div>'+
+      '<div class="tip-r"><span><i class="dot" style="background:var(--band-inner)"></i>下位10%</span><span>'+yen(r.p10[idx])+'</span></div>'+
+      '<div class="tip-r"><span><i class="dot" style="background:var(--s2)"></i>課税口座</span><span>'+yen(r.taxOnly[idx])+'</span></div>'+
+      '<div class="tip-r"><span><i class="dot" style="background:var(--ink-3)"></i>元本</span><span>'+yen(r.principal[idx])+'</span></div>'+
+      '<div class="tip-r"><span>元本割れの割合</span><span>'+(r.loss[idx]*100).toFixed(1)+'%</span></div>';
+    tip.classList.add("on");
+    var wr=$("#fan-wrap").getBoundingClientRect();
+    var lx=(x/W)*bb.width+(bb.left-wr.left);
+    tip.style.left=Math.max(4,Math.min(wr.width-tip.offsetWidth-4, lx+14))+"px";
+    tip.style.top=Math.max(4,(ev.clientY-wr.top)-tip.offsetHeight-14)+"px";
+  };
+  svg.onpointerleave=function(){cross.setAttribute("opacity","0");tip.classList.remove("on")};
+}
+
+function tile(k,v,s,tint){
+  return '<div class="tile" style="--tint:'+tint+'"><span class="tile-k">'+esc(k)+'</span>'+
+         '<span class="tile-v">'+esc(v)+'</span><span class="tile-s">'+esc(s)+'</span></div>';
+}
+function hs(k,v,s){
+  return '<div><span class="hs-k">'+esc(k)+'</span><span class="hs-v">'+esc(v)+'</span>'+
+         (s?'<span class="hs-s">'+esc(s)+'</span>':'')+'</div>';
+}
+
+function readSim(){
+  return {
+    mode:mode,
+    monthly:+$("#i-monthly").value, years:+$("#i-years").value,
+    fee:+$("#i-fee").value, trials:+$("#i-trials").value,
+    ret:+$("#i-ret").value, vol:+$("#i-vol").value,
+    wStock:+$("#i-wstock").value, fromYear:+$("#i-period").value, block:+$("#i-block").value
+  };
+}
+
+function renderSim(){
+  var o=readSim();
+  $("#v-monthly").textContent=o.monthly.toLocaleString("ja-JP")+" 円";
+  $("#v-years").textContent=o.years+" 年";
+  $("#v-ret").textContent=o.ret.toFixed(1)+" %";
+  $("#v-vol").textContent=o.vol.toFixed(1)+" %";
+  $("#v-fee").textContent=trim5(o.fee)+" %";
+  $("#v-wstock").textContent="株式 "+o.wStock+"％ ／ 国債 "+(100-o.wStock)+"％";
+  $("#hist-fields").hidden = (mode!=="hist");
+  $("#param-fields").hidden = (mode==="hist");
+  $("#hist-card").hidden = (mode!=="hist");
+  $("#m-hist").setAttribute("aria-pressed", mode==="hist"?"true":"false");
+  $("#m-param").setAttribute("aria-pressed", mode==="hist"?"false":"true");
+  ["monthly","years","ret","vol","fee","trials","wstock","period","block"].forEach(function(k){
+    save("sim_"+k, document.getElementById("i-"+k).value);
+  });
+  save("mode",mode);
+
+  var r=simulate(o), n=o.years, src=(mode==="hist"?"実績データ抽出":"パラメータ指定");
+  var benefit=r.p50[n]-r.taxOnly[n];
+  $("#sim-tiles").innerHTML=
+    tile("中央値（税引後）",yen(r.p50[n]),"投入元本 "+yen(r.principal[n]),"var(--s1)")+
+    tile("下位10%",yen(r.p10[n]),"10回に1回はこれ以下","var(--band-inner)")+
+    tile("上位10%",yen(r.p90[n]),"10回に1回はこれ以上","var(--band-inner)")+
+    tile("非課税による差",yen(benefit),"課税口座だけの場合との差","var(--s2)");
+
+  if(mode==="hist" && r.stats){
+    var s=r.stats;
+    $("#hist-stats").innerHTML=
+      hs("年率リターン",(s.gm*100).toFixed(2)+"%","幾何平均・"+s.n+"年")+
+      hs("標準偏差",(s.sd*100).toFixed(1)+"%","年次リターンのばらつき")+
+      hs("最悪の年",(s.worst.r*100).toFixed(1)+"%",s.worst.y+"年")+
+      hs("最良の年",(s.best.r*100).toFixed(1)+"%",s.best.y+"年")+
+      hs("マイナスの年",s.neg+" / "+s.n+"年",(s.neg/s.n*100).toFixed(0)+"% の確率")+
+      hs("元本割れ",(r.loss[n]*100).toFixed(1)+"%",n+"年後の試行のうち");
+    $("#hist-src").innerHTML='S&amp;P500（配当込み）'+o.wStock+'％＋米10年国債'+(100-o.wStock)+
+      '％を、'+s.from+'〜'+s.to+'年の実績から'+(o.block>1?o.block+'年ずつ連続で':'1年ずつ')+
+      '抽出。出典：<a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Damodaran, NYU Stern</a>。'+
+      '<b>米ドル建てのため為替変動は含みません。</b>';
+  }
+
+  var w=[];
+  if(o.monthly*12>ANNUAL) w.push("毎月"+o.monthly.toLocaleString("ja-JP")+"円は年間"+yen(o.monthly*12)+"となり、NISAの年間上限360万円を超えます。超過分は課税口座に積み立てたものとして計算しています。");
+  if(r.capYear) w.push(r.capYear+"年目に生涯非課税枠1,800万円を使い切ります。以降の積立は課税口座扱いです。");
+  $("#sim-warn").innerHTML = w.length ? '<div class="warn">'+w.map(esc).join("<br><br>")+'</div>' : "";
+
+  var rows=[
+    ["投入元本の合計", yen(r.total)],
+    ["うち NISA（非課税）", yen(r.pN)],
+    ["うち 課税口座", yen(r.pT)],
+    ["生涯非課税枠 1,800万円の消化率", (Math.min(1,r.pN/LIFETIME)*100).toFixed(1)+" %"],
+    ["枠を使い切る時期", r.capYear ? r.capYear+" 年目" : "この条件では使い切りません"],
+    ["リターンの決め方", src]
+  ];
+  $("#room-tbl").tBodies[0].innerHTML=rows.map(function(x){
+    return "<tr><td>"+esc(x[0])+'</td><td class="num">'+esc(x[1])+"</td></tr>";
+  }).join("");
+
+  drawFan(r);
+}
+
+["i-monthly","i-years","i-ret","i-vol","i-fee","i-trials","i-wstock","i-period","i-block"].forEach(function(id){
+  document.getElementById(id).addEventListener("input",renderSim);
+});
+$("#m-hist").addEventListener("click",function(){mode="hist";renderSim()});
+$("#m-param").addEventListener("click",function(){mode="param";renderSim()});
+$("#b-reseed").addEventListener("click",function(){seed=(seed*1103515245+12345)>>>0;renderSim()});
+$("#b-reset").addEventListener("click",function(){
+  var d={"i-monthly":50000,"i-years":25,"i-ret":5,"i-vol":18,"i-fee":0.05775,
+         "i-trials":2000,"i-wstock":100,"i-period":1970,"i-block":5};
+  Object.keys(d).forEach(function(k){document.getElementById(k).value=d[k]});
+  mode="hist"; seed=20260903; renderSim();
+});
+
+/* =======================================================================
+   TAB 2 — lifetime cost (real expense ratios)
+   ======================================================================= */
+var FUND_DEFAULTS=[
+  {name:"eMAXIS Slim 全世界株式（オール・カントリー）", fee:0.05775},
+  {name:"eMAXIS Slim 米国株式（S&P500）",             fee:0.0814},
+  {name:"eMAXIS Slim 先進国株式インデックス",          fee:0.09889},
+  {name:"eMAXIS Slim 国内株式（TOPIX）",              fee:0.143},
+  {name:"eMAXIS Slim バランス（8資産均等型）",         fee:0.143}
+];
+var funds = load("funds", FUND_DEFAULTS.slice());
+
+function runCost(monthly,years,ret,fee){
+  var months=years*12, gm=Math.pow(1+ret/100,1/12), feeM=fee/100/12;
+  var bN=0,bT=0,cT=0,cost=0,used=0,pN=0;
+  for(var m=0;m<months;m++){
+    if(m%12===0) used=0;
+    bN*=gm; bT*=gm;
+    var c1=bN*feeM, c2=bT*feeM; bN-=c1; bT-=c2; cost+=c1+c2;
+    var toN=Math.min(monthly,Math.max(0,LIFETIME-pN),Math.max(0,ANNUAL-used));
+    bN+=toN; pN+=toN; used+=toN;
+    var rest=monthly-toN; bT+=rest; cT+=rest;
+  }
+  return {net: bN+bT-Math.max(0,bT-cT)*TAX, cost:cost};
+}
+function buildCostRows(){
+  $("#cost-tbl").tBodies[0].innerHTML=funds.map(function(f,i){
+    return "<tr>"+
+      '<td><input type="text" data-f="name" data-i="'+i+'" value="'+esc(f.name)+'" aria-label="ファンド名"></td>'+
+      '<td><input type="number" data-f="fee" data-i="'+i+'" value="'+f.fee+'" min="0" max="5" step="any" aria-label="信託報酬"></td>'+
+      '<td class="num" data-c="net"></td><td class="num" data-c="gap"></td><td class="num" data-c="cost"></td>'+
+      '<td><button class="del" data-del="'+i+'" aria-label="この行を削除">×</button></td></tr>';
+  }).join("");
+}
+function renderCost(){
+  var monthly=+$("#c-monthly").value, years=+$("#c-years").value, ret=+$("#c-ret").value;
+  $("#cv-monthly").textContent=monthly.toLocaleString("ja-JP")+" 円";
+  $("#cv-years").textContent=years+" 年";
+  $("#cv-ret").textContent=ret.toFixed(1)+" %";
+  save("cost_monthly",monthly); save("cost_years",years); save("cost_ret",ret); save("funds",funds);
+
+  var tb=$("#cost-tbl").tBodies[0];
+  if(tb.rows.length!==funds.length) buildCostRows();
+
+  var res=funds.map(function(f){var x=runCost(monthly,years,ret,f.fee);return {name:f.name,fee:f.fee,net:x.net,cost:x.cost}});
+  var best=Math.max.apply(null,res.map(function(x){return x.net}));
+  res.forEach(function(x,i){
+    var tr=tb.rows[i], d=x.net-best;
+    tr.querySelector('[data-c=net]').textContent=yen(x.net);
+    var g=tr.querySelector('[data-c=gap]');
+    g.textContent = d<-1 ? yen(d) : "—";
+    g.style.color = d<-1 ? "var(--s2)" : "var(--ink-3)";
+    tr.querySelector('[data-c=cost]').textContent=yen(x.cost);
+  });
+  drawBars(res.map(function(x){return {label:x.name, value:x.cost}}));
+}
+function drawBars(items){
+  var W=780,rowH=42,T=14,B=34,L=250,R=96;
+  var H=T+B+items.length*rowH, pw=W-L-R;
+  var svg=$("#cost-svg"); svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var vmax=Math.max.apply(null,items.map(function(d){return d.value}).concat([1]));
+  var ax=niceAxis(vmax*1.02,4), o=[];
+  for(var v=0;v<=ax.max+1e-6;v+=ax.step){
+    var x=L+pw*v/ax.max;
+    o.push('<line x1="'+x.toFixed(1)+'" y1="'+T+'" x2="'+x.toFixed(1)+'" y2="'+(T+items.length*rowH)+'" stroke="var(--grid)" stroke-width="1"/>');
+    o.push('<text x="'+x.toFixed(1)+'" y="'+(T+items.length*rowH+20)+'" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--ink-3)">'+yenShort(v)+'</text>');
+  }
+  items.forEach(function(d,i){
+    var y=T+i*rowH+8, h=rowH-18, w=Math.max(0,pw*d.value/ax.max);
+    var lbl=d.label.length>19?d.label.slice(0,18)+"…":d.label;
+    o.push('<text x="'+(L-12)+'" y="'+(y+h/2+4)+'" text-anchor="end" font-size="11.5" fill="var(--ink-2)">'+esc(lbl)+'</text>');
+    o.push('<rect x="'+L+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+h+'" rx="4" fill="var(--s1)"/>');
+    o.push('<text x="'+(L+w+10).toFixed(1)+'" y="'+(y+h/2+4)+'" font-family="var(--mono)" font-size="12" font-weight="600" fill="var(--ink)">'+yenShort(d.value)+'</text>');
+  });
+  o.push('<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(T+items.length*rowH)+'" stroke="var(--line-strong)" stroke-width="1"/>');
+  o.push('<text x="'+(L+pw/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="11" fill="var(--ink-3)">支払コスト総額</text>');
+  svg.innerHTML=o.join("");
+}
+["c-monthly","c-years","c-ret"].forEach(function(id){document.getElementById(id).addEventListener("input",renderCost)});
+$("#c-add").addEventListener("click",function(){funds.push({name:"新しいファンド",fee:0.3});buildCostRows();renderCost()});
+$("#cost-tbl").addEventListener("input",function(e){
+  var t=e.target, i=t.dataset.i; if(i===undefined) return;
+  if(t.dataset.f==="name") funds[+i].name=t.value; else funds[+i].fee=Math.max(0,+t.value||0);
+  renderCost();
+});
+$("#cost-tbl").addEventListener("click",function(e){
+  var d=e.target.dataset.del;
+  if(d!==undefined && funds.length>1){funds.splice(+d,1);buildCostRows();renderCost()}
+});
+
+/* =======================================================================
+   TAB 3 — weighted ranking
+   ======================================================================= */
+var METRICS=[
+  {key:"cost",  label:"低コスト", w:"w-cost",   dir:-1, color:"var(--s1)"},
+  {key:"ret",   label:"リターン", w:"w-ret",    dir: 1, color:"var(--s2)"},
+  {key:"risk",  label:"低リスク", w:"w-risk",   dir:-1, color:"var(--s3)"},
+  {key:"sharpe",label:"シャープ", w:"w-sharpe", dir: 1, color:"var(--s4)"},
+  {key:"size",  label:"規模",     w:"w-size",   dir: 1, color:"var(--s5)"}
+];
+var PICK_DEFAULTS=[
+  {name:"eMAXIS Slim 全世界株式（オール・カントリー）", fee:0.05775, aum:137917, ret:9.0,  vol:17.5},
+  {name:"eMAXIS Slim 米国株式（S&P500）",             fee:0.0814,  aum:128730, ret:11.0, vol:18.5},
+  {name:"eMAXIS Slim 先進国株式インデックス",          fee:0.09889, aum:13781,  ret:9.5,  vol:18.0},
+  {name:"eMAXIS Slim 国内株式（TOPIX）",              fee:0.143,   aum:8058,   ret:6.5,  vol:16.0},
+  {name:"eMAXIS Slim バランス（8資産均等型）",         fee:0.143,   aum:5499,   ret:5.0,  vol:9.5}
+];
+var picks = load("picks", PICK_DEFAULTS.slice());
+
+function sharpe(p,rf){ return p.vol>0 ? (p.ret-rf)/p.vol : 0 }
+function buildRankRows(){
+  $("#rank-in").tBodies[0].innerHTML=picks.map(function(p,i){
+    return "<tr>"+
+      '<td><input type="text" data-f="name" data-i="'+i+'" value="'+esc(p.name)+'" aria-label="銘柄名"></td>'+
+      '<td><input type="number" data-f="fee" data-i="'+i+'" value="'+p.fee+'" min="0" step="any" aria-label="信託報酬"></td>'+
+      '<td><input type="number" data-f="aum" data-i="'+i+'" value="'+p.aum+'" min="0" step="10" aria-label="純資産"></td>'+
+      '<td><input type="number" data-f="ret" data-i="'+i+'" value="'+p.ret+'" step="0.1" aria-label="年率リターン"></td>'+
+      '<td><input type="number" data-f="vol" data-i="'+i+'" value="'+p.vol+'" min="0" step="0.1" aria-label="年率ボラティリティ"></td>'+
+      '<td class="num" data-c="sharpe"></td>'+
+      '<td><button class="del" data-del="'+i+'" aria-label="この行を削除">×</button></td></tr>';
+  }).join("");
+}
+function renderRank(){
+  var rf=+$("#w-rf").value, W={};
+  METRICS.forEach(function(m){W[m.key]=+document.getElementById(m.w).value});
+  $("#wv-cost").textContent=W.cost; $("#wv-ret").textContent=W.ret;
+  $("#wv-risk").textContent=W.risk; $("#wv-sharpe").textContent=W.sharpe;
+  $("#wv-size").textContent=W.size; $("#wv-rf").textContent=rf.toFixed(2)+" %";
+  save("weights",W); save("rf",rf); save("picks",picks);
+
+  var rtb=$("#rank-in").tBodies[0];
+  if(rtb.rows.length!==picks.length) buildRankRows();
+  picks.forEach(function(p,i){ rtb.rows[i].querySelector('[data-c=sharpe]').textContent=sharpe(p,rf).toFixed(2) });
+
+  var raw=picks.map(function(p){
+    return {cost:p.fee, ret:p.ret, risk:p.vol, sharpe:sharpe(p,rf), size:Math.log10(Math.max(1,p.aum))};
+  });
+  var norm=picks.map(function(){return {}});
+  METRICS.forEach(function(m){
+    var vals=raw.map(function(x){return x[m.key]});
+    var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+    raw.forEach(function(x,i){
+      var t=(hi-lo<1e-9)?0.5:(x[m.key]-lo)/(hi-lo);
+      norm[i][m.key]=(m.dir>0?t:1-t)*100;
+    });
+  });
+  var wsum=METRICS.reduce(function(a,m){return a+W[m.key]},0);
+  var scored=picks.map(function(p,i){
+    var parts=METRICS.map(function(m){
+      return {label:m.label,color:m.color,v:wsum?W[m.key]*norm[i][m.key]/wsum:0,n:norm[i][m.key],w:W[m.key]};
+    });
+    return {name:p.name, parts:parts, score:parts.reduce(function(a,x){return a+x.v},0)};
+  }).sort(function(a,b){return b.score-a.score});
+
+  $("#rank-legend").innerHTML=METRICS.map(function(m){
+    return '<span class="lg"><span class="lg-sw band" style="background:'+m.color+'"></span>'+m.label+"（重み "+W[m.key]+"）</span>";
+  }).join("");
+  $("#rank-formula").textContent="スコア = Σ( 重み_i × 正規化値_i ) ÷ Σ重み   ／  Σ重み = "+wsum+"   ／  正規化: 最小=0点, 最大=100点";
+  drawStacked(scored,wsum);
+}
+function drawStacked(rows,wsum){
+  var W=780,rowH=46,T=16,B=34,L=250,R=76;
+  var H=T+B+rows.length*rowH, pw=W-L-R;
+  var svg=$("#rank-svg"); svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var o=[];
+  if(!wsum){
+    o.push('<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="13" fill="var(--ink-3)">重みをすべて0にすると順位はつきません</text>');
+    svg.innerHTML=o.join(""); return;
+  }
+  for(var v=0;v<=100;v+=25){
+    var x=L+pw*v/100;
+    o.push('<line x1="'+x+'" y1="'+T+'" x2="'+x+'" y2="'+(T+rows.length*rowH)+'" stroke="var(--grid)" stroke-width="1"/>');
+    o.push('<text x="'+x+'" y="'+(T+rows.length*rowH+20)+'" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--ink-3)">'+v+'</text>');
+  }
+  rows.forEach(function(d,i){
+    var y=T+i*rowH+9, h=rowH-20, cx=L;
+    var lbl=d.name.length>21?d.name.slice(0,20)+"…":d.name;
+    o.push('<text x="14" y="'+(y+h/2+4)+'" font-family="var(--mono)" font-size="12" font-weight="600" fill="var(--ink-3)">'+(i+1)+'</text>');
+    o.push('<text x="'+(L-12)+'" y="'+(y+h/2+4)+'" text-anchor="end" font-size="11.5" fill="var(--ink)">'+esc(lbl)+'</text>');
+    d.parts.forEach(function(p){
+      var w=pw*p.v/100;
+      if(w<=0.5){cx+=w;return}
+      o.push('<rect x="'+cx.toFixed(1)+'" y="'+y+'" width="'+Math.max(0,w-2).toFixed(1)+'" height="'+h+'" rx="2" fill="'+p.color+'"/>');
+      cx+=w;
+    });
+    o.push('<text x="'+(L+pw*d.score/100+10).toFixed(1)+'" y="'+(y+h/2+4)+'" font-family="var(--mono)" font-size="12.5" font-weight="600" fill="var(--ink)">'+d.score.toFixed(1)+'</text>');
+    o.push('<rect class="rhit" data-r="'+i+'" x="'+L+'" y="'+(T+i*rowH)+'" width="'+pw+'" height="'+rowH+'" fill="transparent"/>');
+  });
+  o.push('<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(T+rows.length*rowH)+'" stroke="var(--line-strong)" stroke-width="1"/>');
+  o.push('<text x="'+(L+pw/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="11" fill="var(--ink-3)">総合スコア（100点満点）</text>');
+  svg.innerHTML=o.join("");
+
+  var tip=$("#rank-tip"), wrap=$("#rank-wrap");
+  svg.onpointermove=function(ev){
+    var t=ev.target;
+    if(!t.classList||!t.classList.contains("rhit")){tip.classList.remove("on");return}
+    var d=rows[+t.dataset.r];
+    tip.innerHTML='<div class="tip-h">'+esc(d.name)+"　"+d.score.toFixed(1)+"点</div>"+
+      d.parts.map(function(p){
+        return '<div class="tip-r"><span><i class="dot" style="background:'+p.color+'"></i>'+p.label+'</span><span>'+p.n.toFixed(0)+"点 × "+p.w+" → "+p.v.toFixed(1)+"</span></div>";
+      }).join("");
+    tip.classList.add("on");
+    var wr=wrap.getBoundingClientRect();
+    tip.style.left=Math.max(4,Math.min(wr.width-tip.offsetWidth-4, ev.clientX-wr.left+14))+"px";
+    tip.style.top=Math.max(4,ev.clientY-wr.top-tip.offsetHeight-12)+"px";
+  };
+  svg.onpointerleave=function(){tip.classList.remove("on")};
+}
+METRICS.forEach(function(m){document.getElementById(m.w).addEventListener("input",renderRank)});
+$("#w-rf").addEventListener("input",renderRank);
+$("#r-add").addEventListener("click",function(){picks.push({name:"新しい銘柄",fee:0.2,aum:500,ret:6,vol:15});buildRankRows();renderRank()});
+$("#rank-in").addEventListener("input",function(e){
+  var t=e.target, i=t.dataset.i; if(i===undefined) return;
+  var f=t.dataset.f;
+  if(f==="name") picks[+i].name=t.value; else picks[+i][f]=+t.value||0;
+  renderRank();
+});
+$("#rank-in").addEventListener("click",function(e){
+  var d=e.target.dataset.del;
+  if(d!==undefined && picks.length>2){picks.splice(+d,1);buildRankRows();renderRank()}
+});
+
+/* ---------- restore ---------- */
+(function(){
+  ["monthly","years","ret","vol","fee","trials","wstock","period","block"].forEach(function(k){
+    var v=load("sim_"+k,null); if(v!==null) document.getElementById("i-"+k).value=v;
+  });
+  [["c-monthly","cost_monthly"],["c-years","cost_years"],["c-ret","cost_ret"]].forEach(function(p){
+    var v=load(p[1],null); if(v!==null) document.getElementById(p[0]).value=v;
+  });
+  var w=load("weights",null);
+  if(w) METRICS.forEach(function(m){ if(w[m.key]!==undefined) document.getElementById(m.w).value=w[m.key] });
+  var rf=load("rf",null); if(rf!==null) $("#w-rf").value=rf;
+  var t=load("tab",null); if(t) document.getElementById(t).click();
+})();
+
+renderSim(); renderCost(); renderRank();
+})();
+
+</script>
+
+</body>
+</html>
