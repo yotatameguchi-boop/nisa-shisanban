@@ -1,2 +1,5 @@
-.DS_Store
-node_modules/
+# build_dataset.py が取ってくるShillerの元データ（1.6MB）。必要な年次系列は data/ に抽出済み
+analysis/shiller.xls
+# 実行時の中間生成物
+analysis/panel.csv
+analysis/model1_fit.csv
