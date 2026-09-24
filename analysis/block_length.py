@@ -85,9 +85,9 @@ def stationary(rng, L):
     return r[idx]
 
 rows = []
-for nm, fn in [("1年ずつ（IID）", lambda g: iid(g)),
+for nm, fn in [("1年ずつ（IID・現在の既定）", lambda g: iid(g)),
                ("循環BS 2年",      lambda g: circular(g, 2)),
-               ("循環BS 5年（既定）", lambda g: circular(g, 5)),
+               ("循環BS 5年（旧既定）", lambda g: circular(g, 5)),
                ("循環BS 10年",     lambda g: circular(g, 10)),
                ("定常BS 平均5年",   lambda g: stationary(g, 5))]:
     v = accumulate(fn(np.random.default_rng(20260923)))
