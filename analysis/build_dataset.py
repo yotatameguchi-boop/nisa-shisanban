@@ -41,16 +41,21 @@ def load_repo():
                     names=["year","TBILL","TBOND","STK"]).set_index("year")
     x = pd.read_csv(REPO/"msci-world-ex-usa-1970-2025.csv", header=None,
                     names=["year","EXUS"]).set_index("year")
+    e = pd.read_csv(REPO/"ff-emerging-1990-2025.csv", header=None,
+                    names=["year","EM"]).set_index("year")
     f = pd.read_csv(REPO/"usdjpy-yearend-1971-2025.csv", header=None,
                     names=["year","FX"]).set_index("year")
     f["FXCHG"] = 100.0*(f["FX"]/f["FX"].shift(1) - 1)   # ＋＝円安
-    return h.join(x, how="outer").join(f, how="outer")
+    return h.join(x, how="outer").join(e, how="outer").join(f, how="outer")
 
 def build(shiller_path):
     df = load_repo().join(load_shiller(shiller_path), how="outer").sort_index()
+    # オルカン（MSCI ACWI）の地域構成。毎年末リバランスの前提
+    W_US, W_DEV, W_EM = 0.65, 0.23, 0.12
+    df["ACWI"] = W_US*df["STK"] + W_DEV*df["EXUS"] + W_EM*df["EM"]
     # 円建て＝(1+ドル建て)×(1+為替変動)-1
-    df["STK_JPY"]  = 100*((1+df["STK"]/100)*(1+df["FXCHG"]/100) - 1)
-    df["EXUS_JPY"] = 100*((1+df["EXUS"]/100)*(1+df["FXCHG"]/100) - 1)
+    for c in ["STK", "EXUS", "EM", "ACWI"]:
+        df[c+"_JPY"] = 100*((1+df[c]/100)*(1+df["FXCHG"]/100) - 1)
     df["TERM"]     = df["GS10"] - df["TBILL"]           # 期間スプレッド
     df["REALR"]    = df["TBILL"] - df["INFL"]           # 実質短期金利
     return df
@@ -61,7 +66,8 @@ if __name__ == "__main__":
     # Shillerから抜き出した年次系列だけをリポジトリに残す（元の1.6MBは同梱しない）
     ann = df.loc[1871:2025, ["CAPE","DY","GS10","CPI"]].dropna(how="all")
     ann.round(4).to_csv(REPO/"shiller-annual-1871-2025.csv")
-    cols = ["STK","EXUS","TBOND","TBILL","FXCHG","STK_JPY","CAPE","EY","DY","GS10","INFL"]
+    cols = ["STK","EXUS","EM","ACWI","TBOND","TBILL","FXCHG","ACWI_JPY","STK_JPY",
+            "CAPE","EY","DY","GS10","INFL"]
     sub = df.loc[1971:2025, cols]
     print(sub.round(2).to_string())
     print("\n欠測:\n", sub.isna().sum()[lambda s: s>0])
